@@ -1,0 +1,23 @@
+QPushButton,
+QPushButton:!hover,
+QPushButton:!pressed {
+    background: url(:resource);
+    background-repeat: none;
+    border-style: flat;
+    margin-left: -77px;
+    margin-top: 0px;
+}
+
+QPushButton:hover {
+    background: url(:resource);
+    background-repeat: none;
+    margin-left: -77px;
+    margin-top: -35px;
+}
+
+QPushButton:pressed {
+    background: url(:resource);
+    background-repeat: none;
+    margin-left: -77px;
+    margin-top: -70px;
+}
