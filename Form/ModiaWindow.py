@@ -13,16 +13,12 @@ class ModiaWindow(QMainWindow):
 
     def __init__(self, parent=None):
         super(ModiaWindow, self).__init__(parent)
-        codec = QTextCodec.codecForName('UTF-8')
-        QTextCodec.setCodecForTr(codec)
-        QTextCodec.setCodecForLocale(codec)
-        QTextCodec.setCodecForCStrings(codec)
         self.__pic_bg = QPixmap(':resource')
-        self.WIDTH_MIN = 400
-        self.HEIGHT_MIN = 400
-        self.WIDTH_DEFAULT = 800
-        self.HEIGHT_DEFAULT = 600
-        self.WIDTH_BORDER_TOP = 89
+        self.WIDTH_MIN = 721
+        self.HEIGHT_MIN = 500
+        self.WIDTH_DEFAULT = 721
+        self.HEIGHT_DEFAULT = 599
+        self.WIDTH_BORDER_TOP = 28
         self.WIDTH_BORDER_RIGHT = 12
         self.WIDTH_BORDER_BOTTOM = 14
         self.WIDTH_BORDER_LEFT = 12
@@ -30,11 +26,16 @@ class ModiaWindow(QMainWindow):
         self.OFFSET_BORDER_RIGHT = 8
         self.OFFSET_BORDER_BOTTOM = 10
         self.OFFSET_BORDER_LEFT = 8
+        self.WIDTH_FRAME_LEFT = 360
         self.__cursor_loc = None
+        self.__is_fixed_size = False
+        self.__is_fixed_width = False
+        self.__is_fixed_height = False
         self.__is_maximized = False
         self.__is_zdt = False
         self.__is_sticking = False
         self.__is_sticked = False
+        self.__lyric_shown = True
         self.__is_suspended = True
         self.__move_point = None
         self.__cursor_changed = False
@@ -42,11 +43,11 @@ class ModiaWindow(QMainWindow):
         self.__window_resizing = False
         self.__setup_ui()
         self.__geometry_frame = self.geometry()
-        self.__register_events()
+        self.__register_actions()
         self.__audio_manager = AudioManager(self)
 
     def __setup_ui(self):
-        self.setWindowTitle('Modia Player')
+        self.setWindowTitle(QApplication.applicationName())
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowMinMaxButtonsHint)
         self.setWindowModality(Qt.WindowModal)
         self.setAttribute(Qt.WA_TranslucentBackground)
@@ -57,6 +58,7 @@ class ModiaWindow(QMainWindow):
         self.resize(self.WIDTH_DEFAULT + self.OFFSET_BORDER_RIGHT + self.OFFSET_BORDER_LEFT,
                     self.HEIGHT_DEFAULT + self.OFFSET_BORDER_TOP + self.OFFSET_BORDER_BOTTOM)
         self.setWindowIcon(QIcon(':logo'))
+        # Title bar initialization start.
         self.__btn_title_close = MButton(self, MButton.Type.Close)
         self.__btn_title_close.setGeometry(14, 11, 12, 13)
         self.__btn_title_close.setToolTip('退出')
@@ -66,10 +68,57 @@ class ModiaWindow(QMainWindow):
         self.__btn_title_minimize = MButton(self, MButton.Type.Minimize)
         self.__btn_title_minimize.setGeometry(self.__btn_title_maximize.x() + 16, 11, 12, 13)
         self.__btn_title_minimize.setToolTip('最小化')
-        self.__action_bar = MActionBar(self)
-        self.__action_bar.setGeometry(8, 28, self.width() - self.OFFSET_BORDER_LEFT - self.OFFSET_BORDER_RIGHT, 54)
+        self.frame = MFrame(self)
+        horizontal_layout = QHBoxLayout(self.frame)
+        horizontal_layout.setContentsMargins(0, 0, 0, 0)
+        horizontal_layout.setSpacing(0)
+        # Left panel initialization start.
+        frame_main_panel = MFrame(self.frame)
+        size_policy_v_expand = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
+        size_policy_v_expand.setHorizontalStretch(0)
+        size_policy_v_expand.setVerticalStretch(0)
+        size_policy_v_expand.setHeightForWidth(frame_main_panel.sizePolicy().hasHeightForWidth())
+        frame_main_panel.setSizePolicy(size_policy_v_expand)
+        frame_main_panel.setMinimumSize(self.WIDTH_FRAME_LEFT, 0)
+        horizontal_layout.addWidget(frame_main_panel)
+        verticalLayout = QVBoxLayout(frame_main_panel)
+        verticalLayout.setContentsMargins(0, 0, 0, 0)
+        verticalLayout.setSpacing(0)
+        self.__action_bar = MActionBar(frame_main_panel)
+        size_policy_h_expand = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        size_policy_h_expand.setHorizontalStretch(0)
+        size_policy_h_expand.setVerticalStretch(0)
+        size_policy_h_expand.setHeightForWidth(self.__action_bar.sizePolicy().hasHeightForWidth())
+        self.__action_bar.setSizePolicy(size_policy_h_expand)
+        self.__action_bar.setMinimumSize(0, 136)
+        verticalLayout.addWidget(self.__action_bar)
+        frame_music_list = MFrame(frame_main_panel)
+        size_policy_all_expand = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        size_policy_all_expand.setHorizontalStretch(0)
+        size_policy_all_expand.setVerticalStretch(0)
+        size_policy_all_expand.setHeightForWidth(frame_music_list.sizePolicy().hasHeightForWidth())
+        frame_music_list.setSizePolicy(size_policy_all_expand)
+        verticalLayout.addWidget(frame_music_list)
+        gridLayout = QGridLayout(frame_music_list)
+        gridLayout.setContentsMargins(9, 4, 9, 6)
+        self.__music_table = QTableWidget(0, 2, frame_music_list)
+        self.__music_table.setFrameShape(QFrame.StyledPanel)
+        self.__music_table.setHorizontalHeaderLabels(('标题', '时长'))
+        self.__music_table.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.__music_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.__music_table.horizontalHeader().setVisible(False)
+        self.__music_table.verticalHeader().setVisible(False)
+        self.__music_table.setColumnWidth(0, 290)
+        self.__music_table.setColumnWidth(1, 50)
+        MStyleSetter.setStyle(self.__music_table, ':qss_tbl_music_list')
+        gridLayout.addWidget(self.__music_table, 0, 0, 1, 1)
+        # Right panel initialization start.
+        frame_lyric = MFrame(self.frame)
+        size_policy_all_expand.setHeightForWidth(frame_lyric.sizePolicy().hasHeightForWidth())
+        frame_lyric.setSizePolicy(size_policy_all_expand)
+        horizontal_layout.addWidget(frame_lyric)
 
-    def __register_events(self):
+    def __register_actions(self):
         QObject.connect(self.__btn_title_close, SIGNAL('clicked()'), self, SLOT('close()'))
         QObject.connect(self.__btn_title_maximize, SIGNAL('clicked()'), self, SLOT('showMaximized()'))
         QObject.connect(self.__btn_title_minimize, SIGNAL('clicked()'), self, SLOT('showMinimized()'))
@@ -78,31 +127,63 @@ class ModiaWindow(QMainWindow):
         QObject.connect(self.__action_bar.get_widget('BTN_PLAY_PAUSE'), SIGNAL('clicked()'), self,
                         SLOT('__play_pause()'))
         QObject.connect(self.__action_bar.get_widget('BTN_STOP'), SIGNAL('clicked()'), self, SLOT('__stop()'))
+        QObject.connect(self.__action_bar.get_widget('BTN_LYRIC'), SIGNAL('clicked()'), self,
+                        SLOT('__show_hide_lyric()'))
+        QObject.connect(self.__action_bar.get_widget('BTN_ADD_MUSIC'), SIGNAL('clicked()'), self,
+                        SLOT('__add_music()'))
+        self.__music_table.cellDoubleClicked.connect(self.__cell_double_clicked)
 
     @pyqtSlot()
     def __previous(self):
-        print('Previous')
+        self.__audio_manager.previous()
 
     @pyqtSlot()
     def __next(self):
-        print('Next')
+        self.__audio_manager.next()
 
     @pyqtSlot()
     def __play_pause(self):
         if self.__is_suspended:
             self.__audio_manager.play()
-            self.__action_bar.get_widget('BTN_PLAY_PAUSE').setMStyle(MButton.Type.Pause)
-            self.__action_bar.get_widget('BTN_PLAY_PAUSE').setToolTip('暂停')
-            self.__is_suspended = False
         else:
             self.__audio_manager.pause()
-            self.__action_bar.get_widget('BTN_PLAY_PAUSE').setMStyle(MButton.Type.Play)
-            self.__action_bar.get_widget('BTN_PLAY_PAUSE').setToolTip('播放')
-            self.__is_suspended = True
 
     @pyqtSlot()
     def __stop(self):
         self.__audio_manager.stop()
+
+    def __cell_double_clicked(self, row, column):
+        self.__stop()
+        self.__audio_manager.clearQueue()
+        self.__audio_manager.setCurrentSourceByIndex(row)
+        if self.__audio_manager.getMediaObjectState() == Phonon.PlayingState:
+            self.__audio_manager.stop()
+        else:
+            self.__audio_manager.play()
+
+    @pyqtSlot()
+    def __show_hide_lyric(self):
+        if self.__lyric_shown:
+            self.__geometry_frame = self.geometry()
+            self.setMinimumSize(360, self.HEIGHT_MIN + self.OFFSET_BORDER_TOP + self.OFFSET_BORDER_BOTTOM)
+            self.resize(376, self.height())
+            self.__is_fixed_size = True
+        else:
+            self.resize(self.__geometry_frame.width(), self.__geometry_frame.height())
+            self.setMinimumSize(self.WIDTH_MIN + self.OFFSET_BORDER_RIGHT + self.OFFSET_BORDER_LEFT,
+                                self.HEIGHT_MIN + self.OFFSET_BORDER_TOP + self.OFFSET_BORDER_BOTTOM)
+            self.__is_fixed_size = False
+        self.__lyric_shown = not self.__lyric_shown
+
+    @pyqtSlot()
+    def __add_music(self):
+        self.__audio_manager.addMusic()
+
+    def getActionBar(self):
+        return self.__action_bar
+
+    def getMusicTable(self):
+        return self.__music_table
 
     def __get_cursor_location(self, event):
         if event.globalX() == 0:
@@ -133,12 +214,23 @@ class ModiaWindow(QMainWindow):
         return -1
 
     def __set_cursor_shape(self, flag):
+        if self.__is_fixed_size:
+            return
         if flag == self.CursorLocation.WINDOW_LEFT or flag == self.CursorLocation.WINDOW_RIGHT:
+            if self.__is_fixed_width:
+                self.setCursor(Qt.ArrowCursor)
+                return False
             self.setCursor(Qt.SizeHorCursor)
             return True
         if flag == self.CursorLocation.WINDOW_TOP or flag == self.CursorLocation.WINDOW_BOTTOM:
+            if self.__is_fixed_height:
+                self.setCursor(Qt.ArrowCursor)
+                return False
             self.setCursor(Qt.SizeVerCursor)
             return True
+        if self.__is_fixed_width or self.__is_fixed_height:
+            self.setCursor(Qt.ArrowCursor)
+            return False
         if flag == self.CursorLocation.WINDOW_LEFT_TOP or flag == self.CursorLocation.WINDOW_RIGHT_BOTTOM:
             self.setCursor(Qt.SizeFDiagCursor)
             return True
@@ -233,11 +325,10 @@ class ModiaWindow(QMainWindow):
 
     def paintEvent(self, *args, **kwargs):
         painter = QPainter(self)
-        painter.drawPixmap(0, 0, self.__pic_bg, 0, 0, 12, 89)
-        painter.drawPixmap(self.WIDTH_BORDER_LEFT, 0,
-                           self.width() - self.WIDTH_BORDER_RIGHT - self.WIDTH_BORDER_LEFT,
-                           self.WIDTH_BORDER_TOP, self.__pic_bg, 12, 0, 1, 89)
-        painter.drawPixmap(self.width() - self.WIDTH_BORDER_RIGHT, 0, self.__pic_bg, 13, 0, 12, 89)
+        painter.drawPixmap(0, 0, 12, self.WIDTH_BORDER_TOP, self.__pic_bg, 0, 0, 12, self.WIDTH_BORDER_TOP)
+        painter.drawPixmap(self.WIDTH_BORDER_LEFT, 0, self.width() - self.WIDTH_BORDER_RIGHT - self.WIDTH_BORDER_LEFT,
+                           self.WIDTH_BORDER_TOP, self.__pic_bg, 12, 0, 1, self.WIDTH_BORDER_TOP)
+        painter.drawPixmap(self.width() - self.WIDTH_BORDER_RIGHT, 0, self.__pic_bg, 13, 0, 12, self.WIDTH_BORDER_TOP)
         painter.drawPixmap(0, self.height() - self.WIDTH_BORDER_BOTTOM, self.__pic_bg, 0, 90, 12, 14)
         painter.drawPixmap(0, self.WIDTH_BORDER_TOP, self.WIDTH_BORDER_LEFT,
                            self.height() - self.WIDTH_BORDER_BOTTOM - self.WIDTH_BORDER_TOP, self.__pic_bg, 0, 89, 12,
@@ -259,6 +350,11 @@ class ModiaWindow(QMainWindow):
         painter.drawText(1, 5, self.width(), 27, Qt.AlignHCenter | Qt.AlignVCenter, self.windowTitle())
         painter.setPen(QColor(50, 50, 50, 255))
         painter.drawText(0, 4, self.width(), 27, Qt.AlignHCenter | Qt.AlignVCenter, self.windowTitle())
+        painter.setPen(QColor(142, 142, 142, 255))
+        if self.width() > 380:
+            painter.drawLine(self.WIDTH_FRAME_LEFT + self.OFFSET_BORDER_LEFT, self.OFFSET_BORDER_TOP + 22,
+                             self.WIDTH_FRAME_LEFT + self.OFFSET_BORDER_LEFT,
+                             self.height() - self.OFFSET_BORDER_BOTTOM - 1)
 
     @pyqtSlot()
     def showMaximized(self):
@@ -342,5 +438,38 @@ class ModiaWindow(QMainWindow):
             self.__is_zdt = False
 
     def resizeEvent(self, event):
-        self.__action_bar.setGeometry(8, 28, event.size().width() - self.OFFSET_BORDER_LEFT - self.OFFSET_BORDER_RIGHT,
-                                      54)
+        self.frame.setGeometry(self.OFFSET_BORDER_LEFT, self.OFFSET_BORDER_TOP + 22,
+                               self.width() - self.OFFSET_BORDER_LEFT - self.OFFSET_BORDER_RIGHT,
+                               self.height() - self.OFFSET_BORDER_TOP - self.OFFSET_BORDER_BOTTOM - 26)
+
+    def setFixedSize(self, *__args):
+        count_parm = len(__args)
+        if count_parm == 0 or count_parm > 2:
+            raise TypeError('Argument error occurred. (1 or 2 given)')
+        if count_parm == 1:
+            if isinstance(__args[0], QSize):
+                super(ModiaWindow, self).setFixedSize(__args[0])
+                self.__is_fixed_size = True
+            else:
+                raise ValueError('Given argument not QSize type. (QSize type required for 1 argument)')
+        else:
+            if isinstance(__args[0], int) and isinstance(__args[1], int):
+                super(ModiaWindow, self).setFixedSize(__args[0], __args[1])
+                self.__is_fixed_size = True
+            else:
+                raise ValueError('Given arguments not int type. (int type required for 2 arguments)')
+
+    def setFixedWidth(self, p_int):
+        if not isinstance(p_int, int):
+            raise ValueError('Given argument not int type. (int type required)')
+        self.resize(p_int, self.height())
+        self.__is_fixed_width = True
+
+    def setFixedHeight(self, p_int):
+        if not isinstance(p_int, int):
+            raise ValueError('Given argument not int type. (int type required)')
+        self.resize(self.width(), p_int)
+        self.__is_fixed_height = True
+
+    def setSuspendStatus(self, bool_suspended):
+        self.__is_suspended = bool_suspended

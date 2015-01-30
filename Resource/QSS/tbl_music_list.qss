@@ -1,0 +1,90 @@
+QTableView {
+    selection-background-color: #808080;
+    font-family: 'Microsoft Yahei';
+    /*font-size: 10px;*/
+    font-style: normal;
+    /*color: rgb(255, 255, 255);*/
+}
+
+QTableView QTableCornerButton::section {
+    background: red;
+    border: 0px;
+    /*border: 2px outset red;*/
+    font-family: 'Microsoft Yahei';
+    /*font-size: 10px;*/
+    font-style: normal;
+    /*color: rgb(0, 0, 0);*/
+}
+
+ QScrollBar:horizontal {
+     border: 1px solid grey;
+     background: #32CC99;
+     height: 3px;
+     margin: 0px 20px 0 20px;
+ }
+ QScrollBar::handle:horizontal {
+     background: white;
+     min-width: 3px;
+ }
+ QScrollBar::add-line:horizontal {
+     border: 1px solid grey;
+     background: #32CC99;
+     width: 3px;
+     subcontrol-position: right;
+     subcontrol-origin: margin;
+ }
+
+ QScrollBar::sub-line:horizontal {
+     border: 1px solid grey;
+     background: #32CC99;
+     width: 3px;
+     subcontrol-position: left;
+     subcontrol-origin: margin;
+ }
+
+  QScrollBar:left-arrow:horizontal, QScrollBar::right-arrow:horizontal {
+     border: 1px solid grey;
+     width: 3px;
+     height: 3px;
+     background: white;
+ }
+
+ QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+     background: none;
+ }
+
+   QScrollBar:vertical {
+      border: 1px solid grey;
+      background: #32CC99;
+      width: 3px;
+      margin: 22px 0 22px 0;
+  }
+  QScrollBar::handle:vertical {
+      background: white;
+      min-height: 3px;
+  }
+  QScrollBar::add-line:vertical {
+      border: 1px solid grey;
+      background: #32CC99;
+      height: 3px;
+      subcontrol-position: bottom;
+      subcontrol-origin: margin;
+  }
+
+  QScrollBar::sub-line:vertical {
+      border: 1px solid grey;
+      background: #32CC99;
+      height: 3px;
+      subcontrol-position: top;
+      subcontrol-origin: margin;
+  }
+  QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {
+      border: 1px solid grey;
+      width: 3px;
+      height: 3px;
+      background: white;
+  }
+
+  QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+      background: none;
+  }

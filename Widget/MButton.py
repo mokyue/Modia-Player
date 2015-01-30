@@ -16,6 +16,7 @@ class MButton(QPushButton):
     def __init__(self, parent=None, b_type=Type.Close):
         super(MButton, self).__init__(parent)
         self.setMStyle(b_type)
+        self.setCursor(Qt.PointingHandCursor)
 
     def setMStyle(self, b_type):
         MStyleSetter.setStyle(self, self.__dict_type[b_type])

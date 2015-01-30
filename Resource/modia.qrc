@@ -11,5 +11,9 @@
         <file alias="qss_btn_music_play">QSS/btn_music_play.qss</file>
         <file alias="qss_btn_music_previous">QSS/btn_music_previous.qss</file>
         <file alias="qss_btn_music_stop">QSS/btn_music_stop.qss</file>
+        <file alias="qss_lbl_time_remain">QSS/lbl_time_remain.qss</file>
+        <file alias="qss_sld_music_volume">QSS/sld_music_volume.qss</file>
+        <file alias="qss_sld_music_seek">QSS/sld_music_seek.qss</file>
+        <file alias="qss_tbl_music_list">QSS/tbl_music_list.qss</file>
     </qresource>
 </RCC>

@@ -21,3 +21,10 @@ QPushButton:pressed {
     margin-left: -49px;
     margin-top: -70px;
 }
+
+QPushButton:!enabled {
+    background: url(:resource);
+    background-repeat: none;
+    margin-left: -173px;
+    margin-top: -70px;
+}
