@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 __author__ = 'n1213 <myn1213@corp.netease.com>'
 
-from __init__ import *
+import os
+import sys
+
+reload(sys)
+sys.setdefaultencoding("utf-8")
 
 for root, dirs, files in os.walk('.'):
     for file in files:

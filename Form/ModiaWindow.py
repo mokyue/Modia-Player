@@ -1,7 +1,21 @@
 # -*- coding: utf-8 -*-
 __author__ = 'n1213 <myn1213@corp.netease.com>'
 
-from __init__ import *
+from PyQt4.QtCore import SIGNAL, QObject, SLOT, pyqtSlot, QRect, QPoint, QSize, Qt
+from PyQt4.QtGui import QMainWindow, QPixmap, QApplication, QSizePolicy, QHBoxLayout, QVBoxLayout, QGridLayout, \
+    QTableWidget, QFrame, QAbstractItemView, QIcon, QPainter, QBrush, QColor, QFont
+from PyQt4.phonon import Phonon
+from Core.AudioManager import AudioManager
+from Core.Enum import Enum
+from Core.MStyleSetter import MStyleSetter
+from Widget.MActionBar import MActionBar
+from Widget.MButton import MButton
+from Widget.MFrame import MFrame
+from Widget.MLyricPanel import MLyricPanel
+import sys
+
+reload(sys)
+sys.setdefaultencoding("utf-8")
 
 
 class ModiaWindow(QMainWindow):
@@ -44,7 +58,7 @@ class ModiaWindow(QMainWindow):
         self.__setup_ui()
         self.__geometry_frame = self.geometry()
         self.__register_actions()
-        self.__audio_manager = AudioManager(self)
+        self.__audio_manager = AudioManager(self, self.lyric_panel)
 
     def __setup_ui(self):
         self.setWindowTitle(QApplication.applicationName())
@@ -70,8 +84,8 @@ class ModiaWindow(QMainWindow):
         self.__btn_title_minimize.setToolTip('最小化')
         self.frame = MFrame(self)
         horizontal_layout = QHBoxLayout(self.frame)
-        horizontal_layout.setContentsMargins(0, 0, 0, 0)
-        horizontal_layout.setSpacing(0)
+        horizontal_layout.setContentsMargins(0, 0, 4, 0)
+        horizontal_layout.setSpacing(5)
         # Left panel initialization start.
         frame_main_panel = MFrame(self.frame)
         size_policy_v_expand = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
@@ -100,7 +114,7 @@ class ModiaWindow(QMainWindow):
         frame_music_list.setSizePolicy(size_policy_all_expand)
         verticalLayout.addWidget(frame_music_list)
         gridLayout = QGridLayout(frame_music_list)
-        gridLayout.setContentsMargins(9, 4, 9, 6)
+        gridLayout.setContentsMargins(9, 2, 9, 5)
         self.__music_table = QTableWidget(0, 2, frame_music_list)
         self.__music_table.setFrameShape(QFrame.StyledPanel)
         self.__music_table.setHorizontalHeaderLabels(('标题', '时长'))
@@ -112,11 +126,11 @@ class ModiaWindow(QMainWindow):
         self.__music_table.setColumnWidth(1, 50)
         MStyleSetter.setStyle(self.__music_table, ':qss_tbl_music_list')
         gridLayout.addWidget(self.__music_table, 0, 0, 1, 1)
-        # Right panel initialization start.
-        frame_lyric = MFrame(self.frame)
-        size_policy_all_expand.setHeightForWidth(frame_lyric.sizePolicy().hasHeightForWidth())
-        frame_lyric.setSizePolicy(size_policy_all_expand)
-        horizontal_layout.addWidget(frame_lyric)
+        # Lyric panel initialization start.
+        self.lyric_panel = MLyricPanel(self.frame)
+        size_policy_all_expand.setHeightForWidth(self.lyric_panel.sizePolicy().hasHeightForWidth())
+        self.lyric_panel.setSizePolicy(size_policy_all_expand)
+        horizontal_layout.addWidget(self.lyric_panel)
 
     def __register_actions(self):
         QObject.connect(self.__btn_title_close, SIGNAL('clicked()'), self, SLOT('close()'))
@@ -164,11 +178,13 @@ class ModiaWindow(QMainWindow):
     @pyqtSlot()
     def __show_hide_lyric(self):
         if self.__lyric_shown:
+            self.__action_bar.get_widget('BTN_LYRIC').setMStyle(MButton.Type.Show_Lyric)
             self.__geometry_frame = self.geometry()
             self.setMinimumSize(360, self.HEIGHT_MIN + self.OFFSET_BORDER_TOP + self.OFFSET_BORDER_BOTTOM)
             self.resize(376, self.height())
             self.__is_fixed_size = True
         else:
+            self.__action_bar.get_widget('BTN_LYRIC').setMStyle(MButton.Type.Hide_Lyric)
             self.resize(self.__geometry_frame.width(), self.__geometry_frame.height())
             self.setMinimumSize(self.WIDTH_MIN + self.OFFSET_BORDER_RIGHT + self.OFFSET_BORDER_LEFT,
                                 self.HEIGHT_MIN + self.OFFSET_BORDER_TOP + self.OFFSET_BORDER_BOTTOM)
@@ -410,11 +426,14 @@ class ModiaWindow(QMainWindow):
                 self.move(event.globalPos() - QPoint(self.width() / 2, 15))
         self.__cursor_loc = self.__get_cursor_location(event)
         if self.__cursor_loc == self.CursorLocation.SCREEN_LEFT:
-            self.__window_stick_to(self.StickType.LEFT)
+            if self.__lyric_shown:
+                self.__window_stick_to(self.StickType.LEFT)
         elif self.__cursor_loc == self.CursorLocation.SCREEN_RIGHT:
-            self.__window_stick_to(self.StickType.RIGHT)
+            if self.__lyric_shown:
+                self.__window_stick_to(self.StickType.RIGHT)
         elif self.__cursor_loc == self.CursorLocation.SCREEN_TOP:
-            self.showMaximized()
+            if self.__lyric_shown:
+                self.showMaximized()
             self.__is_sticked = True
         else:
             if self.width() - self.OFFSET_BORDER_LEFT - self.OFFSET_BORDER_RIGHT >= QApplication.desktop().screenGeometry().width():

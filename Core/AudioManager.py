@@ -1,13 +1,21 @@
 # -*- coding: utf-8 -*-
 __author__ = 'n1213 <myn1213@corp.netease.com>'
 
-from __init__ import *
-from Widget.MButton import *
+from PyQt4.QtCore import QTime, Qt, QString
+from PyQt4.QtGui import QMessageBox, QTableWidgetItem, QFileDialog, QDesktopServices
+from PyQt4.phonon import Phonon
+from Widget.MButton import MButton
+import os
+import sys
+
+reload(sys)
+sys.setdefaultencoding("utf-8")
 
 
 class AudioManager():
-    def __init__(self, window):
+    def __init__(self, window, lyric_panel):
         self.__main_window = window
+        self.__lyric_panel = lyric_panel
         self.__audio_output = Phonon.AudioOutput(Phonon.MusicCategory, self.__main_window)
         self.__media_object = Phonon.MediaObject(self.__main_window)
         self.__media_object.setTickInterval(1000)
@@ -29,6 +37,7 @@ class AudioManager():
     def tick(self, time):
         self.__main_window.getActionBar().get_widget('LBL_TIME_REMAIN').setText(
             QTime(0, (time / 60000) % 60, (time / 1000) % 60).toString('mm:ss'))
+        self.__lyric_panel.switchLyric(time)
 
     def play(self, media_source=None):
         if media_source != None:
@@ -85,13 +94,15 @@ class AudioManager():
             btn_music_stop = self.__main_window.getActionBar().get_widget('BTN_STOP')
             if not btn_music_stop.isEnabled():
                 btn_music_stop.setEnabled(True)
+            self.__set_lyric(self.__media_object.currentSource().fileName())
         elif newState == Phonon.StoppedState:
             self.__main_window.getActionBar().get_widget('SLD_SEEK').setCursor(Qt.ArrowCursor)
-            self.__main_window.getActionBar().get_widget('INDICT_INFO').setText('No music')
+            self.__main_window.getActionBar().get_widget('INDICT_INFO').setText(u'无音乐')
             self.__main_window.getActionBar().get_widget('LBL_TIME_TOTAL').setText('00:00')
             btn_music_stop = self.__main_window.getActionBar().get_widget('BTN_STOP')
             if btn_music_stop.isEnabled():
                 btn_music_stop.setEnabled(False)
+            self.__lyric_panel.setNoLyric()
             self.__main_window.getActionBar().get_widget('BTN_PLAY_PAUSE').setMStyle(MButton.Type.Play)
             self.__main_window.getActionBar().get_widget('BTN_PLAY_PAUSE').setToolTip('播放')
             self.__main_window.setSuspendStatus(True)
@@ -101,6 +112,13 @@ class AudioManager():
             self.__main_window.setSuspendStatus(True)
         if newState != Phonon.StoppedState and newState != Phonon.PausedState:
             return
+
+    def __set_lyric(self, music_path):
+        lrc_path = str(music_path.left(music_path.lastIndexOf('.'))) + u'.lrc'
+        if os.path.exists(lrc_path):
+            self.__lyric_panel.setLyricFile(lrc_path)
+        else:
+            self.__lyric_panel.setNoLyric()
 
     def __get_music_display_info(self):
         metadata = self.__media_object.metaData()
@@ -123,18 +141,13 @@ class AudioManager():
         if newState == Phonon.ErrorState:
             QMessageBox.warning(self.__main_window, "Error opening files",
                                 self.__meta_information_resolver.errorString())
-
             while self.__list_music and self.__list_music.pop() != self.__meta_information_resolver.currentSource():
                 pass
-
             return
-
         if newState != Phonon.StoppedState and newState != Phonon.PausedState:
             return
-
         if self.__meta_information_resolver.currentSource().type() == Phonon.MediaSource.Invalid:
             return
-
         metaData = self.__meta_information_resolver.metaData()
         title = metaData.get(QString('TITLE'), [''])[0]
         if not title:
@@ -145,31 +158,24 @@ class AudioManager():
         titleItem = QTableWidgetItem(title)
         titleItem.setFlags(titleItem.flags() ^ Qt.ItemIsEditable)
         titleItem.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-
         long_duration = self.__meta_information_resolver.totalTime()
         total_time_item = QTableWidgetItem(
             QTime(0, (long_duration / 60000) % 60, (long_duration / 1000) % 60).toString('mm:ss'))
         total_time_item.setFlags(total_time_item.flags() ^ Qt.ItemIsEditable)
         total_time_item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-
         currentRow = self.__music_table.rowCount()
         self.__music_table.insertRow(currentRow)
         self.__music_table.setItem(currentRow, 0, titleItem)
         self.__music_table.setItem(currentRow, 1, total_time_item)
-
         if not self.__music_table.selectedItems():
             self.__music_table.selectRow(0)
             self.__media_object.setCurrentSource(self.__meta_information_resolver.currentSource())
-
         index = self.__list_music.index(self.__meta_information_resolver.currentSource()) + 1
-
         if len(self.__list_music) > index:
             self.__meta_information_resolver.setCurrentSource(self.__list_music[index])
 
     def currentSourceChanged(self, source):
-        print('currentSourceChanged')
-        # self.__music_table.selectRow(self.sources.index(source))
-        # self.timeLcd.display('00:00')
+        self.__music_table.selectRow(self.__list_music.index(source))
 
     def aboutToFinish(self):
         index_next = self.__list_music.index(self.__media_object.currentSource()) + 1
@@ -187,12 +193,23 @@ class AudioManager():
                                                QDesktopServices.storageLocation(QDesktopServices.MusicLocation))
         if not sources:
             return
+        index = len(self.__list_music)
         for music_file in sources:
-            self.__list_music.append(Phonon.MediaSource(music_file))
+            media_source = Phonon.MediaSource(music_file)
+            if not self.__is_existing(media_source):
+                self.__list_music.append(media_source)
         if is_empty:
             self.__media_object.setCurrentSource(self.__list_music[len(self.__list_music) - 1])
+        if index == len(self.__list_music):
+            return
         if self.__list_music:
-            self.__meta_information_resolver.setCurrentSource(self.__list_music[0])
+            self.__meta_information_resolver.setCurrentSource(self.__list_music[index])
+
+    def __is_existing(self, media_source):
+        for ms in self.__list_music:
+            if media_source.fileName() == ms.fileName():
+                return True
+        return False
 
     def clearQueue(self):
         self.__media_object.clearQueue()

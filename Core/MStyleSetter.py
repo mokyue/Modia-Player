@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 __author__ = 'n1213 <myn1213@corp.netease.com>'
 
-from __init__ import *
+from PyQt4.QtCore import QFile, QString
+from Resource.modia_rc import *
+import sys
+
+reload(sys)
+sys.setdefaultencoding("utf-8")
 
 
 class MStyleSetter:
@@ -10,3 +15,4 @@ class MStyleSetter:
         file_qss = QFile(path_stylesheet)
         file_qss.open(QFile.ReadOnly)
         widget.setStyleSheet(QString(file_qss.readAll()))
+        file_qss.close()

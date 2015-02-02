@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 __author__ = 'n1213 <myn1213@corp.netease.com>'
 
-from __init__ import *
+from PyQt4.QtCore import Qt, SIGNAL, SLOT, pyqtSlot, QString, QObject, QTimer
+from PyQt4.QtGui import QFrame, QFont, QPixmap, QPainter, QColor, QLabel, QFontMetrics
+import sys
+
+reload(sys)
+sys.setdefaultencoding("utf-8")
 
 
 class MIndicator(QFrame):

@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 __author__ = 'n1213 <myn1213@corp.netease.com>'
 
-from Form.ModiaWindow import *
+from PyQt4.QtCore import QTextCodec
+from PyQt4.QtGui import QApplication
+from Form.ModiaWindow import ModiaWindow
+import sys
 
+reload(sys)
+sys.setdefaultencoding("utf-8")
 
 app = QApplication(sys.argv)
 app.setApplicationName("Modia Player")

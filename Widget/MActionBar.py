@@ -1,10 +1,18 @@
 # -*- coding: utf-8 -*-
 __author__ = 'n1213 <myn1213@corp.netease.com>'
 
-from __init__ import *
-from MButton import MButton
-from MIndicator import MIndicator
-from MFrame import MFrame
+from PyQt4.QtGui import QPixmap, QLabel, QPainter
+from PyQt4.QtCore import Qt
+from Core.MStyleSetter import MStyleSetter
+from Widget.MButton import MButton
+from Widget.MFrame import MFrame
+from Widget.MIndicator import MIndicator
+from Widget.MSeekSlider import MSeekSlider
+from Widget.MVolumeSlider import MVolumeSlider
+import sys
+
+reload(sys)
+sys.setdefaultencoding("utf-8")
 
 
 class MActionBar(MFrame):
@@ -29,15 +37,12 @@ class MActionBar(MFrame):
         self.__btn_music_stop.setEnabled(False)
         self.__dict_widget['BTN_STOP'] = self.__btn_music_stop
         self.__indicator = MIndicator(self)
-        self.__indicator.setText('No music')
+        self.__indicator.setText(u'无音乐')
         self.__indicator.setRollingSpeed(300)
         self.__dict_widget['INDICT_INFO'] = self.__indicator
-        self.__volume_slider = Phonon.VolumeSlider(self)
-        MStyleSetter.setStyle(self.__volume_slider, ':qss_sld_music_volume')
-        self.__volume_slider.setCursor(Qt.PointingHandCursor)
+        self.__volume_slider = MVolumeSlider(self)
         self.__dict_widget['SLD_VOL'] = self.__volume_slider
-        self.__seek_slider = Phonon.SeekSlider(self)
-        MStyleSetter.setStyle(self.__seek_slider, ':qss_sld_music_seek')
+        self.__seek_slider = MSeekSlider(self)
         self.__dict_widget['SLD_SEEK'] = self.__seek_slider
         self.__label_time_remain = QLabel(self)
         self.__label_time_remain.setAlignment(Qt.AlignLeft | Qt.AlignTop)
@@ -49,10 +54,10 @@ class MActionBar(MFrame):
         MStyleSetter.setStyle(self.__label_time_total, ':qss_lbl_time_remain')
         self.__label_time_total.setText('00:00')
         self.__dict_widget['LBL_TIME_TOTAL'] = self.__label_time_total
-        self.__btn_lyric = QPushButton(self)
+        self.__btn_lyric = MButton(self, MButton.Type.Hide_Lyric)
         self.__btn_lyric.setToolTip('歌词')
         self.__dict_widget['BTN_LYRIC'] = self.__btn_lyric
-        self.__btn_add_music = QPushButton(self)
+        self.__btn_add_music = MButton(self, MButton.Type.Add_Music)
         self.__btn_add_music.setToolTip('添加音乐')
         self.__dict_widget['BTN_ADD_MUSIC'] = self.__btn_add_music
 
@@ -80,5 +85,5 @@ class MActionBar(MFrame):
                                           self.__btn_music_previous.width(), self.__btn_music_previous.height())
         self.__volume_slider.setGeometry(self.__btn_music_previous.x() + 120, self.__btn_music_previous.y() + 5, 100,
                                          18)
-        self.__btn_lyric.setGeometry(self.__seek_slider.x() + 50, self.__seek_slider.y() + 40, 20, 20)
-        self.__btn_add_music.setGeometry(self.__seek_slider.x() + 70, self.__seek_slider.y() + 40, 20, 20)
+        self.__btn_add_music.setGeometry(self.__seek_slider.x() + 40, self.__btn_music_previous.y() + 4, 28, 23)
+        self.__btn_lyric.setGeometry(self.__btn_add_music.x() + 25, self.__btn_music_previous.y() + 4, 28, 23)
