@@ -1,0 +1,7 @@
+QLabel {
+    background: transparent;
+    font-family: 'Microsoft Yahei';
+    font-size: 9px;
+    font-style: normal;
+    color: rgb(60, 60, 60);
+}

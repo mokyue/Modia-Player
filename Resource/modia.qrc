@@ -1,0 +1,22 @@
+<RCC>
+    <qresource>
+        <file alias="resource">Image/resource.png</file>
+        <file alias="logo">Image/logo.ico</file>
+        <file alias="qss_btn_title_close">QSS/btn_title_close.qss</file>
+        <file alias="qss_btn_title_maximize">QSS/btn_title_maximize.qss</file>
+        <file alias="qss_btn_title_minimize">QSS/btn_title_minimize.qss</file>
+        <file alias="qss_btn_title_restore">QSS/btn_title_restore.qss</file>
+        <file alias="qss_btn_music_next">QSS/btn_music_next.qss</file>
+        <file alias="qss_btn_music_pause">QSS/btn_music_pause.qss</file>
+        <file alias="qss_btn_music_play">QSS/btn_music_play.qss</file>
+        <file alias="qss_btn_music_previous">QSS/btn_music_previous.qss</file>
+        <file alias="qss_btn_music_stop">QSS/btn_music_stop.qss</file>
+        <file alias="qss_btn_add_music">QSS/btn_add_music.qss</file>
+        <file alias="qss_btn_show_lyric">QSS/btn_show_lyric.qss</file>
+        <file alias="qss_btn_hide_lyric">QSS/btn_hide_lyric.qss</file>
+        <file alias="qss_lbl_time_remain">QSS/lbl_time_remain.qss</file>
+        <file alias="qss_sld_music_volume">QSS/sld_music_volume.qss</file>
+        <file alias="qss_sld_music_seek">QSS/sld_music_seek.qss</file>
+        <file alias="qss_tbl_music_list">QSS/tbl_music_list.qss</file>
+    </qresource>
+</RCC>
